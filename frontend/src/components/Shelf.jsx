@@ -24,7 +24,7 @@ const Shelf = () => {
 
     return (
 
-        <div aria-hidden="true" className="select-none">
+        <div aria-hidden="true" className="min-w-0 select-none">
 
             <div className="flex h-72 items-end gap-1 overflow-hidden px-2 sm:h-80">
 

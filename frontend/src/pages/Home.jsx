@@ -12,9 +12,9 @@ const Home = () => {
 
         <main className="mx-auto max-w-6xl px-5 sm:px-8">
 
-            <section className="grid gap-14 py-16 lg:grid-cols-[1fr_1.15fr] lg:items-end lg:gap-16 lg:py-24">
+            <section className="grid grid-cols-1 gap-14 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:items-end lg:gap-16 lg:py-24">
 
-                <div className="max-w-xl">
+                <div className="min-w-0 max-w-xl">
 
                     <h1 className="font-serif text-5xl leading-[1.05] font-semibold tracking-tight text-balance sm:text-6xl">
                         Your books, catalogued.
