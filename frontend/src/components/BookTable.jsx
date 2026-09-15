@@ -1,177 +1,191 @@
-import React from "react";
+import { useState } from "react";
 
-const BookTable = ({ books, onEdit, onDelete }) => {
+import { genreColor } from "../lib/genres";
+import { formatPrice } from "../lib/format";
+
+
+const actionButton =
+    "rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-60";
+
+
+const BookTable = ({ books, loading, editingId, onEdit, onDelete }) => {
+
+    const [pendingId, setPendingId] = useState(null);
+
+    const [deletingId, setDeletingId] = useState(null);
+
+
+    const confirmDelete = async (id) => {
+
+        setDeletingId(id);
+
+        await onDelete(id);
+
+        setDeletingId(null);
+
+        setPendingId(null);
+    };
+
+
+    if (loading) {
+
+        return (
+            <div className="rounded-lg border border-rule bg-white px-6 py-12 text-muted">
+                Loading your books…
+            </div>
+        );
+    }
+
+
+    if (books.length === 0) {
+
+        return (
+            <div className="rounded-lg border border-dashed border-rule px-6 py-14">
+                <p className="font-serif text-xl font-semibold">
+                    Nothing on the shelf yet
+                </p>
+                <p className="mt-2 text-muted">
+                    Fill in the form to add your first book.
+                </p>
+            </div>
+        );
+    }
+
 
     return (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
 
-            {/* Header */}
-            <div className="px-6 py-5 border-b">
-                <h2 className="text-2xl font-bold">
-                    Books ({books.length})
-                </h2>
-            </div>
+        <ul className="divide-y divide-rule overflow-hidden rounded-lg border border-rule bg-white">
 
+            {books.map((book) => {
 
-            {/* No Books */}
-            {books.length === 0 ? (
+                const isEditing = editingId === book._id;
 
-                <div className="text-center py-16 text-gray-500">
+                const isPending = pendingId === book._id;
 
-                    <p className="text-lg">
-                        No books available.
-                    </p>
+                return (
 
-                    <p className="mt-2">
-                        Add your first book above.
-                    </p>
+                    <li
+                        key={book._id}
+                        className={`relative py-4 pr-4 pl-6 transition-colors sm:pr-5 ${
+                            isEditing ? "bg-green-soft" : ""
+                        }`}
+                    >
 
-                </div>
-
-            ) : (
-
-                /* Table */
-                <div className="overflow-x-auto">
-
-                    <table className="w-full">
-
-                        <thead className="bg-gray-100">
-
-                            <tr>
-
-                                <th className="px-6 py-3 text-left">
-                                    #
-                                </th>
-
-                                <th className="px-6 py-3 text-left">
-                                    Title
-                                </th>
-
-                                <th className="px-6 py-3 text-left">
-                                    Author
-                                </th>
-                                <th className="px-6 py-3 text-left">
-                                    ISBN
-                                </th>
-
-                                <th className="px-6 py-3 text-left">
-                                    Genre
-                                </th>
-
-                                <th className="px-6 py-3 text-left">
-                                    Year
-                                </th>
-
-                                <th className="px-6 py-3 text-left">
-                                    Price
-                                </th>
-
-                                <th className="px-6 py-3 text-center">
-                                    Actions
-                                </th>
-
-                            </tr>
-
-                        </thead>
+                        {/* Spine strip coloured by genre */}
+                        <span
+                            aria-hidden="true"
+                            className="absolute inset-y-0 left-0 w-1.5"
+                            style={{ backgroundColor: genreColor(book.genre) }}
+                        />
 
 
-                        <tbody>
+                        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
 
-                            {books.map((book, index) => (
+                            <h3 className="font-serif text-lg leading-snug font-semibold">
+                                {book.title}
+                            </h3>
 
-                                <tr
-                                    key={book._id}
-                                    className="border-t hover:bg-gray-50"
-                                >
+                            <p className="font-medium tabular-nums">
+                                {formatPrice(book.price)}
+                            </p>
 
-                                    {/* Number */}
+                        </div>
 
-                                    <td className="px-6 py-4">
-                                        {index + 1}
-                                    </td>
-
-
-                                    {/* Title */}
-
-                                    <td className="px-6 py-4 font-medium">
-                                        {book.title}
-                                    </td>
+                        <p className="text-muted">
+                            {book.author}
+                        </p>
 
 
-                                    {/* Author */}
+                        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
 
-                                    <td className="px-6 py-4">
-                                        {book.author}
-                                    </td>
+                            <dl className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-muted">
 
-                                    <td className="px-6 py-4">
-    {book.isbn}
-</td>
+                                <div>
+                                    <dt className="sr-only">Genre</dt>
+                                    <dd className="flex items-center gap-1.5">
+                                        <span
+                                            aria-hidden="true"
+                                            className="inline-block size-2 rounded-full"
+                                            style={{ backgroundColor: genreColor(book.genre) }}
+                                        />
+                                        {book.genre}
+                                    </dd>
+                                </div>
 
+                                <div>
+                                    <dt className="sr-only">Published</dt>
+                                    <dd className="tabular-nums">{book.publishedYear}</dd>
+                                </div>
 
-                                    {/* Genre */}
+                                <div className="flex gap-1">
+                                    <dt>ISBN</dt>
+                                    <dd className="tabular-nums">{book.isbn}</dd>
+                                </div>
 
-                                    <td className="px-6 py-4">
-
-                                        <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm">
-                                            {book.genre}
-                                        </span>
-
-                                    </td>
-
-
-                                    {/* Year */}
-
-                                    <td className="px-6 py-4">
-                                        {book.publishedYear}
-                                    </td>
-
-
-                                    {/* Price */}
-
-                                    <td className="px-6 py-4">
-                                        ₹{book.price}
-                                    </td>
+                            </dl>
 
 
-                                    {/* Actions */}
+                            {isPending ? (
 
-                                    <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
 
-                                        <div className="flex justify-center gap-2">
+                                    <span className="text-sm text-ink">
+                                        Delete this book?
+                                    </span>
 
-                                            <button
-                                                onClick={() => onEdit(book)}
-                                                className="bg-yellow-500 text-white px-3 py-1.5 rounded-lg hover:bg-yellow-600"
-                                            >
-                                                Edit
-                                            </button>
+                                    <button
+                                        type="button"
+                                        disabled={deletingId === book._id}
+                                        onClick={() => confirmDelete(book._id)}
+                                        className={`${actionButton} bg-danger text-white hover:bg-danger/90`}
+                                    >
+                                        {deletingId === book._id ? "Deleting…" : "Delete"}
+                                    </button>
 
+                                    <button
+                                        type="button"
+                                        disabled={deletingId === book._id}
+                                        onClick={() => setPendingId(null)}
+                                        className={`${actionButton} text-ink hover:bg-green-soft`}
+                                    >
+                                        Keep
+                                    </button>
 
-                                            <button
-                                                onClick={() => onDelete(book._id)}
-                                                className="bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600"
-                                            >
-                                                Delete
-                                            </button>
+                                </div>
 
-                                        </div>
+                            ) : (
 
-                                    </td>
+                                <div className="flex items-center gap-1">
 
-                                </tr>
+                                    <button
+                                        type="button"
+                                        onClick={() => onEdit(book)}
+                                        aria-label={`Edit ${book.title}`}
+                                        className={`${actionButton} text-green hover:bg-green-soft`}
+                                    >
+                                        Edit
+                                    </button>
 
-                            ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setPendingId(book._id)}
+                                        aria-label={`Delete ${book.title}`}
+                                        className={`${actionButton} text-danger hover:bg-danger/10`}
+                                    >
+                                        Delete
+                                    </button>
 
-                        </tbody>
+                                </div>
 
-                    </table>
+                            )}
 
-                </div>
+                        </div>
 
-            )}
+                    </li>
+                );
+            })}
 
-        </div>
+        </ul>
     );
 };
 

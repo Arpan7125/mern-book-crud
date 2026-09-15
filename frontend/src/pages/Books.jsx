@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 
 import BookForm from "../components/BookForm";
+import BookTable from "../components/BookTable";
+import Alert from "../components/Alert";
+import { formatPrice } from "../lib/format";
 
 import {
     getBooks,
@@ -14,37 +17,43 @@ const Books = () => {
 
     const [books, setBooks] = useState([]);
 
-    const [selectedBook, setSelectedBook] =
-        useState(null);
+    const [loading, setLoading] = useState(true);
 
-    const [message, setMessage] =
-        useState("");
+    const [selectedBook, setSelectedBook] = useState(null);
 
-    const [error, setError] =
-        useState("");
+    const [message, setMessage] = useState("");
+
+    const [error, setError] = useState("");
 
 
-    // GET BOOKS
+    // GET BOOKS (used after adding or editing)
     const loadBooks = async () => {
 
-        try {
+        const data = await getBooks();
 
-            setError("");
-
-            const data = await getBooks();
-
-            setBooks(data);
-
-        } catch (error) {
-
-            setError(error.message);
-        }
+        setBooks(data);
     };
 
 
+    // First load
     useEffect(() => {
 
-        loadBooks();
+        let active = true;
+
+        getBooks()
+            .then((data) => {
+                if (active) setBooks(data);
+            })
+            .catch((error) => {
+                if (active) setError(error.message);
+            })
+            .finally(() => {
+                if (active) setLoading(false);
+            });
+
+        return () => {
+            active = false;
+        };
 
     }, []);
 
@@ -58,7 +67,6 @@ const Books = () => {
 
             setMessage("");
 
-
             if (selectedBook) {
 
                 await updateBook(
@@ -66,9 +74,7 @@ const Books = () => {
                     bookData
                 );
 
-                setMessage(
-                    "Book updated successfully"
-                );
+                setMessage("Changes saved.");
 
                 setSelectedBook(null);
 
@@ -76,11 +82,8 @@ const Books = () => {
 
                 await createBook(bookData);
 
-                setMessage(
-                    "Book added successfully"
-                );
+                setMessage("Book added.");
             }
-
 
             await loadBooks();
 
@@ -93,33 +96,39 @@ const Books = () => {
     };
 
 
-    // DELETE
+    // EDIT
+    const handleEdit = (book) => {
+
+        setSelectedBook(book);
+
+        setMessage("");
+
+        setError("");
+
+        document
+            .getElementById("book-form")
+            ?.scrollIntoView({ block: "start" });
+    };
+
+
+    // DELETE (confirmation happens inline in the list)
     const handleDelete = async (id) => {
-
-        const confirmDelete =
-            window.confirm(
-                "Are you sure you want to delete this book?"
-            );
-
-
-        if (!confirmDelete) {
-            return;
-        }
-
 
         try {
 
+            setError("");
+
             await deleteBook(id);
 
-            setBooks(
-                books.filter(
-                    book => book._id !== id
-                )
+            setBooks((current) =>
+                current.filter((book) => book._id !== id)
             );
 
-            setMessage(
-                "Book deleted successfully"
-            );
+            if (selectedBook?._id === id) {
+                setSelectedBook(null);
+            }
+
+            setMessage("Book deleted.");
 
         } catch (error) {
 
@@ -128,221 +137,78 @@ const Books = () => {
     };
 
 
+    const total = books.reduce(
+        (sum, book) => sum + (Number(book.price) || 0),
+        0
+    );
+
+    const summary = loading
+        ? "Loading your books…"
+        : books.length === 0
+            ? "No books yet."
+            : `${books.length} ${books.length === 1 ? "book" : "books"}, worth ${formatPrice(total)} in total.`;
+
+
     return (
 
-        <div className="min-h-screen bg-slate-100">
+        <main className="mx-auto max-w-6xl px-5 pt-10 pb-20 sm:px-8 sm:pt-14">
 
-            <div className="max-w-7xl mx-auto p-6">
+            <div className="border-b border-rule pb-6">
 
-                <div className="mb-6">
+                <h1 className="font-serif text-4xl font-semibold tracking-tight">
+                    Your shelf
+                </h1>
 
-                    <h1 className="text-3xl font-bold">
-                        Book Management
-                    </h1>
-
-                    <p className="text-gray-500">
-                        Add, view, update and delete books
-                    </p>
-
-                </div>
-
-
-                {/* SUCCESS MESSAGE */}
-
-                {message && (
-
-                    <div className="bg-green-100 text-green-700 p-3 rounded-lg mb-5">
-                        {message}
-                    </div>
-
-                )}
-
-
-                {/* ERROR MESSAGE */}
-
-                {error && (
-
-                    <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-5">
-                        {error}
-                    </div>
-
-                )}
-
-
-                {/* BOOK FORM */}
-
-                <BookForm
-
-                    selectedBook={selectedBook}
-
-                    onSave={handleSave}
-
-                    onCancel={() =>
-                        setSelectedBook(null)
-                    }
-
-                />
-
-
-                {/* BOOK TABLE */}
-
-                <div className="bg-white rounded-xl shadow overflow-hidden">
-
-                    <div className="p-5 border-b">
-
-                        <h2 className="text-xl font-bold">
-                            Books ({books.length})
-                        </h2>
-
-                    </div>
-
-
-                    {books.length === 0 ? (
-
-                        <div className="p-10 text-center text-gray-500">
-
-                            No books available.
-
-                            <br />
-
-                            Add your first book above.
-
-                        </div>
-
-                    ) : (
-
-                        <div className="overflow-x-auto">
-
-                            <table className="w-full">
-
-                                <thead className="bg-slate-800 text-white">
-
-                                    <tr>
-
-                                        <th className="p-4 text-left">
-                                            #
-                                        </th>
-
-                                        <th className="p-4 text-left">
-                                            Title
-                                        </th>
-
-                                        <th className="p-4 text-left">
-                                            Author
-                                        </th>
-
-                                        <th className="p-4 text-left">
-                                            Genre
-                                        </th>
-
-                                        <th className="p-4 text-left">
-                                            Year
-                                        </th>
-
-                                        <th className="p-4 text-left">
-                                            Price
-                                        </th>
-
-                                        <th className="p-4 text-left">
-                                            Actions
-                                        </th>
-
-                                    </tr>
-
-                                </thead>
-
-
-                                <tbody>
-
-                                    {books.map(
-                                        (book, index) => (
-
-                                            <tr
-                                                key={book._id}
-                                                className="border-b hover:bg-gray-50"
-                                            >
-
-                                                <td className="p-4">
-                                                    {index + 1}
-                                                </td>
-
-                                                <td className="p-4 font-medium">
-                                                    {book.title}
-                                                </td>
-
-                                                <td className="p-4">
-                                                    {book.author}
-                                                </td>
-
-                                                <td className="p-4">
-                                                    {book.genre}
-                                                </td>
-
-                                                <td className="p-4">
-                                                    {book.publishedYear}
-                                                </td>
-
-                                                <td className="p-4">
-                                                    ₹{book.price}
-                                                </td>
-
-                                                <td className="p-4">
-
-                                                    <div className="flex gap-2">
-
-                                                        <button
-
-                                                            onClick={() =>
-                                                                setSelectedBook(
-                                                                    book
-                                                                )
-                                                            }
-
-                                                            className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                                                        >
-
-                                                            Edit
-
-                                                        </button>
-
-
-                                                        <button
-
-                                                            onClick={() =>
-                                                                handleDelete(
-                                                                    book._id
-                                                                )
-                                                            }
-
-                                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                                        >
-
-                                                            Delete
-
-                                                        </button>
-
-                                                    </div>
-
-                                                </td>
-
-                                            </tr>
-
-                                        )
-                                    )}
-
-                                </tbody>
-
-                            </table>
-
-                        </div>
-
-                    )}
-
-                </div>
+                <p className="mt-2 text-muted" aria-live="polite">
+                    {summary}
+                </p>
 
             </div>
 
-        </div>
+
+            {(message || error) && (
+
+                <div className="mt-6 space-y-3">
+                    <Alert tone="success">{message}</Alert>
+                    <Alert tone="error">{error}</Alert>
+                </div>
+
+            )}
+
+
+            <div className="mt-8 grid gap-8 lg:grid-cols-[22rem_1fr] lg:items-start">
+
+                <aside
+                    id="book-form"
+                    className="scroll-mt-6 lg:sticky lg:top-6"
+                >
+                    <BookForm
+                        selectedBook={selectedBook}
+                        onSave={handleSave}
+                        onCancel={() => setSelectedBook(null)}
+                    />
+                </aside>
+
+
+                <section aria-labelledby="book-list-heading">
+
+                    <h2 id="book-list-heading" className="sr-only">
+                        Books
+                    </h2>
+
+                    <BookTable
+                        books={books}
+                        loading={loading}
+                        editingId={selectedBook?._id}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                    />
+
+                </section>
+
+            </div>
+
+        </main>
     );
 };
 

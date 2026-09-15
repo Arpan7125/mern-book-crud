@@ -1,8 +1,36 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+
+import { primaryButton } from "../lib/ui";
+
+
+const LogoMark = () => (
+    <svg
+        width="22"
+        height="22"
+        viewBox="0 0 22 22"
+        aria-hidden="true"
+    >
+        <rect x="2" y="5" width="4.5" height="15" rx="0.75" fill="#1F3A2E" />
+        <rect x="8.5" y="2" width="4.5" height="18" rx="0.75" fill="#B8891E" />
+        <rect x="15" y="7" width="4.5" height="13" rx="0.75" fill="#7A2E3A" />
+    </svg>
+);
+
+
+const navLinkClass = ({ isActive }) =>
+    `rounded-md px-3 py-2 transition-colors ${
+        isActive
+            ? "text-ink underline decoration-brass decoration-2 underline-offset-[10px]"
+            : "text-muted hover:text-ink"
+    }`;
+
 
 const Navbar = () => {
 
     const navigate = useNavigate();
+
+    // Re-render on every route change so login/logout shows up straight away
+    useLocation();
 
     const token = localStorage.getItem("token");
 
@@ -22,86 +50,66 @@ const Navbar = () => {
 
     return (
 
-        <nav className="bg-slate-900 text-white shadow">
+        <header className="border-b border-rule bg-paper">
 
-            <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-
-                {/* LOGO */}
+            <nav
+                aria-label="Main"
+                className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-8"
+            >
 
                 <Link
                     to="/"
-                    className="text-2xl font-bold"
+                    className="flex items-center gap-2.5 font-serif text-xl font-semibold tracking-tight"
                 >
-                    📚 BookStore
+                    <LogoMark />
+                    Shelf
                 </Link>
 
 
-                {/* NAVIGATION */}
-
-                <div className="flex items-center gap-6">
-
-                    <Link
-                        to="/"
-                        className="hover:text-blue-300"
-                    >
-                        Home
-                    </Link>
-
+                <div className="flex items-center gap-1 text-sm sm:gap-2">
 
                     {token ? (
 
                         <>
-
-                            <Link
-                                to="/books"
-                                className="hover:text-blue-300"
-                            >
+                            <NavLink to="/books" className={navLinkClass}>
                                 Books
-                            </Link>
+                            </NavLink>
 
-
-                            <span className="text-gray-300">
-                                Hi, {user?.name}
+                            <span className="hidden px-2 text-muted sm:inline">
+                                {user?.name}
                             </span>
 
-
                             <button
+                                type="button"
                                 onClick={handleLogout}
-                                className="bg-red-500 px-4 py-2 rounded-lg hover:bg-red-600"
+                                className="rounded-md px-3 py-2 text-muted transition-colors hover:bg-green-soft hover:text-ink"
                             >
-                                Logout
+                                Log out
                             </button>
-
                         </>
 
                     ) : (
 
                         <>
-
-                            <Link
-                                to="/login"
-                                className="hover:text-blue-300"
-                            >
-                                Login
-                            </Link>
-
+                            <NavLink to="/login" className={navLinkClass}>
+                                Log in
+                            </NavLink>
 
                             <Link
                                 to="/register"
-                                className="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700"
+                                className={`${primaryButton} px-4 py-2 text-sm`}
                             >
-                                Register
+                                Create account
                             </Link>
-
                         </>
 
                     )}
 
                 </div>
 
-            </div>
+            </nav>
 
-        </nav>
+        </header>
     );
 };
 

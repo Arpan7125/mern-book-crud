@@ -1,35 +1,35 @@
 import { Link } from "react-router-dom";
 
+import { primaryButton } from "../lib/ui";
+
+
 const NotFound = () => {
 
     return (
 
-        <div className="min-h-[80vh] flex items-center justify-center">
+        <main className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
 
-            <div className="text-center">
+            <div className="max-w-md">
 
-                <h1 className="text-7xl font-bold text-red-500">
+                <p className="font-serif text-7xl font-semibold text-brass">
                     404
-                </h1>
-
-                <h2 className="text-2xl font-bold mt-4">
-                    Page Not Found
-                </h2>
-
-                <p className="text-gray-500 mt-2 mb-6">
-                    The page you are looking for does not exist.
                 </p>
 
-                <Link
-                    to="/"
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg"
-                >
-                    Go Home
+                <h1 className="mt-4 font-serif text-3xl font-semibold tracking-tight">
+                    This page isn't on the shelf
+                </h1>
+
+                <p className="mt-3 text-muted">
+                    The link may be old or mistyped.
+                </p>
+
+                <Link to="/" className={`${primaryButton} mt-8`}>
+                    Go to home
                 </Link>
 
             </div>
 
-        </div>
+        </main>
     );
 };
 

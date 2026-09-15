@@ -3,6 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
 import { loginUser } from "../services/api";
+import Alert from "../components/Alert";
+import Field from "../components/Field";
+import { inputClass, primaryButton } from "../lib/ui";
+
 
 const Login = () => {
 
@@ -51,127 +55,89 @@ const Login = () => {
 
     return (
 
-        <div className="min-h-[90vh] flex items-center justify-center bg-slate-100 p-5">
+        <main className="mx-auto flex max-w-6xl justify-center px-5 py-16 sm:px-8 sm:py-24">
 
-            <div className="bg-white w-full max-w-md p-8 rounded-xl shadow-lg">
+            <div className="w-full max-w-sm">
 
-                <h1 className="text-3xl font-bold text-center mb-2">
-                    Login
+                <h1 className="font-serif text-4xl font-semibold tracking-tight">
+                    Log in
                 </h1>
 
-                <p className="text-center text-gray-500 mb-6">
-                    Login to manage your books
+                <p className="mt-2 text-muted">
+                    Log in to see and edit your books.
                 </p>
 
 
-                {serverError && (
-
-                    <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
-                        {serverError}
-                    </div>
-
-                )}
+                <div className="mt-6">
+                    <Alert tone="error">{serverError}</Alert>
+                </div>
 
 
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="space-y-5"
+                    className="mt-6 space-y-5"
+                    noValidate
                 >
 
-                    {/* EMAIL */}
-
-                    <div>
-
-                        <label className="block font-medium mb-1">
-                            Email
-                        </label>
-
+                    <Field label="Email" htmlFor="email" error={errors.email?.message}>
                         <input
+                            id="email"
                             type="email"
-                            placeholder="Enter your email"
-                            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-
+                            autoComplete="email"
+                            placeholder="you@example.com"
+                            className={inputClass}
+                            aria-invalid={errors.email ? "true" : "false"}
+                            aria-describedby={errors.email ? "email-error" : undefined}
                             {...register("email", {
-                                required: "Email is required",
-
+                                required: "Enter your email",
                                 pattern: {
                                     value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                    message: "Enter a valid email"
+                                    message: "Enter a valid email, like you@example.com"
                                 }
                             })}
                         />
-
-                        {errors.email && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.email.message}
-                            </p>
-                        )}
-
-                    </div>
+                    </Field>
 
 
-                    {/* PASSWORD */}
-
-                    <div>
-
-                        <label className="block font-medium mb-1">
-                            Password
-                        </label>
-
+                    <Field label="Password" htmlFor="password" error={errors.password?.message}>
                         <input
+                            id="password"
                             type="password"
-                            placeholder="Enter your password"
-
-                            className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-
+                            autoComplete="current-password"
+                            className={inputClass}
+                            aria-invalid={errors.password ? "true" : "false"}
+                            aria-describedby={errors.password ? "password-error" : undefined}
                             {...register("password", {
-                                required: "Password is required"
+                                required: "Enter your password"
                             })}
                         />
+                    </Field>
 
-                        {errors.password && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.password.message}
-                            </p>
-                        )}
-
-                    </div>
-
-
-                    {/* SUBMIT */}
 
                     <button
                         type="submit"
                         disabled={isSubmitting}
-
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+                        className={`${primaryButton} w-full`}
                     >
-
-                        {isSubmitting
-                            ? "Logging in..."
-                            : "Login"}
-
+                        {isSubmitting ? "Logging in…" : "Log in"}
                     </button>
 
                 </form>
 
 
-                <p className="text-center mt-6">
-
-                    Don't have an account?{" "}
-
+                <p className="mt-8 border-t border-rule pt-6 text-sm text-muted">
+                    New here?{" "}
                     <Link
                         to="/register"
-                        className="text-blue-600 font-semibold hover:underline"
+                        className="font-medium text-green underline underline-offset-4"
                     >
-                        Register
+                        Create an account
                     </Link>
-
                 </p>
 
             </div>
 
-        </div>
+        </main>
     );
 };
 
