@@ -3,6 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
 import { registerUser } from "../services/api";
+import Alert from "../components/Alert";
+import Field from "../components/Field";
+import { inputClass, primaryButton } from "../lib/ui";
+
 
 const Register = () => {
 
@@ -31,27 +35,20 @@ const Register = () => {
             setServerError("");
 
             const response = await registerUser({
-
                 name: data.name,
-
                 email: data.email,
-
                 password: data.password
-
             });
-
 
             localStorage.setItem(
                 "token",
                 response.token
             );
 
-
             localStorage.setItem(
                 "user",
                 JSON.stringify(response.user)
             );
-
 
             navigate("/books");
 
@@ -62,221 +59,135 @@ const Register = () => {
     };
 
 
+    const describe = (name) => ({
+        "aria-invalid": errors[name] ? "true" : "false",
+        "aria-describedby": errors[name] ? `${name}-error` : undefined
+    });
+
+
     return (
 
-        <div className="min-h-[90vh] flex items-center justify-center bg-slate-100 p-5">
+        <main className="mx-auto flex max-w-6xl justify-center px-5 py-16 sm:px-8 sm:py-24">
 
-            <div className="bg-white w-full max-w-md p-8 rounded-xl shadow-lg">
+            <div className="w-full max-w-sm">
 
-                <h1 className="text-3xl font-bold text-center mb-2">
-                    Create Account
+                <h1 className="font-serif text-4xl font-semibold tracking-tight">
+                    Create an account
                 </h1>
 
-                <p className="text-center text-gray-500 mb-6">
-                    Register to manage your books
+                <p className="mt-2 text-muted">
+                    Sign up to start your book list.
                 </p>
 
 
-                {serverError && (
-
-                    <div className="bg-red-100 text-red-700 p-3 rounded-lg mb-4">
-                        {serverError}
-                    </div>
-
-                )}
+                <div className="mt-6">
+                    <Alert tone="error">{serverError}</Alert>
+                </div>
 
 
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="space-y-4"
+                    className="mt-6 space-y-5"
+                    noValidate
                 >
 
-                    {/* NAME */}
-
-                    <div>
-
-                        <label className="block font-medium mb-1">
-                            Name
-                        </label>
-
+                    <Field label="Name" htmlFor="name" error={errors.name?.message}>
                         <input
+                            id="name"
                             type="text"
-                            placeholder="Enter your name"
-
-                            className="w-full border rounded-lg px-4 py-2"
-
+                            autoComplete="name"
+                            className={inputClass}
+                            {...describe("name")}
                             {...register("name", {
-
-                                required: "Name is required",
-
+                                required: "Enter your name",
                                 minLength: {
                                     value: 3,
-                                    message:
-                                        "Name must contain at least 3 characters"
+                                    message: "Name needs at least 3 characters"
                                 }
-
                             })}
                         />
-
-                        {errors.name && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.name.message}
-                            </p>
-                        )}
-
-                    </div>
+                    </Field>
 
 
-                    {/* EMAIL */}
-
-                    <div>
-
-                        <label className="block font-medium mb-1">
-                            Email
-                        </label>
-
+                    <Field label="Email" htmlFor="email" error={errors.email?.message}>
                         <input
+                            id="email"
                             type="email"
-                            placeholder="Enter your email"
-
-                            className="w-full border rounded-lg px-4 py-2"
-
+                            autoComplete="email"
+                            placeholder="you@example.com"
+                            className={inputClass}
+                            {...describe("email")}
                             {...register("email", {
-
-                                required:
-                                    "Email is required",
-
+                                required: "Enter your email",
                                 pattern: {
-
-                                    value:
-                                        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-
-                                    message:
-                                        "Enter a valid email"
-
+                                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                    message: "Enter a valid email, like you@example.com"
                                 }
-
                             })}
                         />
-
-                        {errors.email && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.email.message}
-                            </p>
-                        )}
-
-                    </div>
+                    </Field>
 
 
-                    {/* PASSWORD */}
-
-                    <div>
-
-                        <label className="block font-medium mb-1">
-                            Password
-                        </label>
-
+                    <Field label="Password" htmlFor="password" error={errors.password?.message}>
                         <input
+                            id="password"
                             type="password"
-                            placeholder="Enter password"
-
-                            className="w-full border rounded-lg px-4 py-2"
-
+                            autoComplete="new-password"
+                            placeholder="At least 6 characters"
+                            className={inputClass}
+                            {...describe("password")}
                             {...register("password", {
-
-                                required:
-                                    "Password is required",
-
+                                required: "Choose a password",
                                 minLength: {
-
                                     value: 6,
-
-                                    message:
-                                        "Password must be at least 6 characters"
-
+                                    message: "Password needs at least 6 characters"
                                 }
-
                             })}
                         />
-
-                        {errors.password && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.password.message}
-                            </p>
-                        )}
-
-                    </div>
+                    </Field>
 
 
-                    {/* CONFIRM PASSWORD */}
-
-                    <div>
-
-                        <label className="block font-medium mb-1">
-                            Confirm Password
-                        </label>
-
+                    <Field label="Confirm password" htmlFor="confirmPassword" error={errors.confirmPassword?.message}>
                         <input
+                            id="confirmPassword"
                             type="password"
-                            placeholder="Confirm password"
-
-                            className="w-full border rounded-lg px-4 py-2"
-
+                            autoComplete="new-password"
+                            className={inputClass}
+                            {...describe("confirmPassword")}
                             {...register("confirmPassword", {
-
-                                required:
-                                    "Please confirm password",
-
+                                required: "Type your password again",
                                 validate: (value) =>
                                     value === password ||
-                                    "Passwords do not match"
-
+                                    "Passwords don't match"
                             })}
                         />
+                    </Field>
 
-                        {errors.confirmPassword && (
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.confirmPassword.message}
-                            </p>
-                        )}
-
-                    </div>
-
-
-                    {/* SUBMIT */}
 
                     <button
                         type="submit"
                         disabled={isSubmitting}
-
-                        className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 disabled:bg-gray-400"
+                        className={`${primaryButton} w-full`}
                     >
-
-                        {isSubmitting
-                            ? "Creating Account..."
-                            : "Register"}
-
+                        {isSubmitting ? "Creating account…" : "Create account"}
                     </button>
 
                 </form>
 
 
-                <p className="text-center mt-6">
-
+                <p className="mt-8 border-t border-rule pt-6 text-sm text-muted">
                     Already have an account?{" "}
-
                     <Link
                         to="/login"
-                        className="text-blue-600 font-semibold hover:underline"
+                        className="font-medium text-green underline underline-offset-4"
                     >
-                        Login
+                        Log in
                     </Link>
-
                 </p>
 
             </div>
 
-        </div>
+        </main>
     );
 };
 

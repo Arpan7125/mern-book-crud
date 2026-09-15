@@ -1,6 +1,21 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 
+import Field from "./Field";
+import { GENRES } from "../lib/genres";
+import { inputClass, primaryButton, quietButton } from "../lib/ui";
+
+
+const EMPTY_BOOK = {
+    title: "",
+    author: "",
+    isbn: "",
+    genre: "",
+    publishedYear: "",
+    price: ""
+};
+
+
 const BookForm = ({
     selectedBook,
     onSave,
@@ -11,20 +26,13 @@ const BookForm = ({
         register,
         handleSubmit,
         reset,
-        formState: { errors }
+        formState: { errors, isSubmitting }
     } = useForm({
-        defaultValues: {
-            title: "",
-            author: "",
-            isbn:"",
-            genre: "",
-            publishedYear: "",
-            price: ""
-        }
+        defaultValues: EMPTY_BOOK
     });
 
 
-    // When Edit button is clicked
+    // Fill the form when Edit is clicked, clear it otherwise
     useEffect(() => {
 
         if (selectedBook) {
@@ -32,7 +40,7 @@ const BookForm = ({
             reset({
                 title: selectedBook.title,
                 author: selectedBook.author,
-                isbn:selectedBook.isbn,
+                isbn: selectedBook.isbn,
                 genre: selectedBook.genre,
                 publishedYear: selectedBook.publishedYear,
                 price: selectedBook.price
@@ -40,15 +48,7 @@ const BookForm = ({
 
         } else {
 
-            reset({
-                title: "",
-                author: "",
-                isbn:"",
-                genre: "",
-                publishedYear: "",
-                price: ""
-            });
-
+            reset(EMPTY_BOOK);
         }
 
     }, [selectedBook, reset]);
@@ -56,278 +56,195 @@ const BookForm = ({
 
     const submitHandler = async (data) => {
 
-        await onSave({
-            ...data,
-            publishedYear: Number(data.publishedYear),
-            price: Number(data.price)
-        });
+        try {
 
-        reset();
+            await onSave({
+                ...data,
+                publishedYear: Number(data.publishedYear),
+                price: Number(data.price)
+            });
 
+            reset(EMPTY_BOOK);
+
+        } catch {
+            // The page shows the error; keep what was typed so it can be fixed
+        }
     };
+
+
+    // Keep a genre that isn't in the list (e.g. from older data) selectable while editing
+    const genreOptions =
+        selectedBook?.genre &&
+        !GENRES.some((genre) => genre.name === selectedBook.genre)
+            ? [...GENRES.map((genre) => genre.name), selectedBook.genre]
+            : GENRES.map((genre) => genre.name);
+
+
+    const describe = (name) => ({
+        "aria-invalid": errors[name] ? "true" : "false",
+        "aria-describedby": errors[name] ? `${name}-error` : undefined
+    });
 
 
     return (
 
-        <div className="bg-white rounded-xl shadow p-6 mb-8">
+        <div
+            className={`rounded-lg border bg-white p-6 transition-colors ${
+                selectedBook ? "border-green" : "border-rule"
+            }`}
+        >
 
-            <h2 className="text-2xl font-bold mb-5">
-
-                {selectedBook
-                    ? "✏️ Edit Book"
-                    : "➕ Add New Book"}
-
+            <h2 className="font-serif text-2xl font-semibold tracking-tight">
+                {selectedBook ? "Edit book" : "Add a book"}
             </h2>
+
+            {selectedBook && (
+                <p className="mt-1 text-sm text-muted">
+                    Editing “{selectedBook.title}”
+                </p>
+            )}
 
 
             <form
                 onSubmit={handleSubmit(submitHandler)}
-                className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                className="mt-5 space-y-4"
+                noValidate
             >
 
-                {/* TITLE */}
-
-                <div>
-
-                    <label className="block font-medium mb-1">
-                        Book Title
-                    </label>
-
+                <Field label="Title" htmlFor="title" error={errors.title?.message}>
                     <input
+                        id="title"
                         type="text"
-                        placeholder="Enter book title"
-
+                        className={inputClass}
+                        {...describe("title")}
                         {...register("title", {
-                            required: "Title is required"
+                            required: "Enter the book's title"
                         })}
-
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-
-                    {errors.title && (
-
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.title.message}
-                        </p>
-
-                    )}
-
-                </div>
+                </Field>
 
 
-                {/* AUTHOR */}
-
-                <div>
-
-                    <label className="block font-medium mb-1">
-                        Author
-                    </label>
-
+                <Field label="Author" htmlFor="author" error={errors.author?.message}>
                     <input
+                        id="author"
                         type="text"
-                        placeholder="Enter author name"
-
+                        className={inputClass}
+                        {...describe("author")}
                         {...register("author", {
-                            required: "Author is required"
+                            required: "Enter the author's name"
                         })}
-
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-
-                    {errors.author && (
-
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.author.message}
-                        </p>
-
-                    )}
-
-                </div>
-
-                <div>
-
-    <label className="block font-medium mb-1">
-        ISBN
-    </label>
-
-    <input
-        type="text"
-        placeholder="Enter ISBN"
-        {...register("isbn", {
-            required: "ISBN is required",
-            minLength: {
-                value: 10,
-                message: "ISBN must be at least 10 characters"
-            }
-        })}
-        className="w-full border border-gray-300 rounded-lg px-4 py-2"
-    />
-
-    {errors.isbn && (
-        <p className="text-red-500 text-sm mt-1">
-            {errors.isbn.message}
-        </p>
-    )}
-
-</div>
+                </Field>
 
 
-                {/* GENRE */}
+                <Field label="ISBN" htmlFor="isbn" error={errors.isbn?.message}>
+                    <input
+                        id="isbn"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="9780132350884"
+                        className={`${inputClass} tabular-nums`}
+                        {...describe("isbn")}
+                        {...register("isbn", {
+                            required: "Enter the ISBN",
+                            minLength: {
+                                value: 10,
+                                message: "ISBN needs at least 10 characters"
+                            }
+                        })}
+                    />
+                </Field>
 
-                <div>
 
-                    <label className="block font-medium mb-1">
-                        Genre
-                    </label>
-
+                <Field label="Genre" htmlFor="genre" error={errors.genre?.message}>
                     <select
+                        id="genre"
+                        className={inputClass}
+                        {...describe("genre")}
                         {...register("genre", {
-                            required: "Genre is required"
+                            required: "Choose a genre"
                         })}
-
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2"
                     >
+                        <option value="">Choose a genre</option>
 
-                        <option value="">
-                            Select Genre
-                        </option>
-
-                        <option value="Fiction">
-                            Fiction
-                        </option>
-
-                        <option value="Science">
-                            Science
-                        </option>
-
-                        <option value="Technology">
-                            Technology
-                        </option>
-
-                        <option value="Biography">
-                            Biography
-                        </option>
-
-                        <option value="History">
-                            History
-                        </option>
-
-                        <option value="Fantasy">
-                            Fantasy
-                        </option>
-
+                        {genreOptions.map((name) => (
+                            <option key={name} value={name}>
+                                {name}
+                            </option>
+                        ))}
                     </select>
-
-                    {errors.genre && (
-
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.genre.message}
-                        </p>
-
-                    )}
-
-                </div>
+                </Field>
 
 
-                {/* YEAR */}
+                <div className="grid grid-cols-2 gap-4">
 
-                <div>
-
-                    <label className="block font-medium mb-1">
-                        Published Year
-                    </label>
-
-                    <input
-                        type="number"
-                        placeholder="2026"
-
-                        {...register("publishedYear", {
-                            required: "Published year is required",
-                            min: {
-                                value: 1000,
-                                message: "Enter a valid year"
-                            },
-                            max: {
-                                value: 2100,
-                                message: "Enter a valid year"
-                            }
-                        })}
-
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                    />
-
-                    {errors.publishedYear && (
-
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.publishedYear.message}
-                        </p>
-
-                    )}
-
-                </div>
+                    <Field label="Year" htmlFor="publishedYear" error={errors.publishedYear?.message}>
+                        <input
+                            id="publishedYear"
+                            type="number"
+                            inputMode="numeric"
+                            placeholder="2008"
+                            className={`${inputClass} tabular-nums`}
+                            {...describe("publishedYear")}
+                            {...register("publishedYear", {
+                                required: "Enter the year",
+                                min: {
+                                    value: 1000,
+                                    message: "Use a year from 1000 to 2100"
+                                },
+                                max: {
+                                    value: 2100,
+                                    message: "Use a year from 1000 to 2100"
+                                }
+                            })}
+                        />
+                    </Field>
 
 
-                {/* PRICE */}
-
-                <div>
-
-                    <label className="block font-medium mb-1">
-                        Price (₹)
-                    </label>
-
-                    <input
-                        type="number"
-                        step="0.01"
-                        placeholder="499"
-
-                        {...register("price", {
-                            required: "Price is required",
-                            min: {
-                                value: 0,
-                                message: "Price cannot be negative"
-                            }
-                        })}
-
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                    />
-
-                    {errors.price && (
-
-                        <p className="text-red-500 text-sm mt-1">
-                            {errors.price.message}
-                        </p>
-
-                    )}
+                    <Field label="Price (₹)" htmlFor="price" error={errors.price?.message}>
+                        <input
+                            id="price"
+                            type="number"
+                            step="0.01"
+                            inputMode="decimal"
+                            placeholder="450"
+                            className={`${inputClass} tabular-nums`}
+                            {...describe("price")}
+                            {...register("price", {
+                                required: "Enter the price",
+                                min: {
+                                    value: 0,
+                                    message: "Price can't be negative"
+                                }
+                            })}
+                        />
+                    </Field>
 
                 </div>
 
 
-                {/* BUTTONS */}
-
-                <div className="md:col-span-2 flex gap-3">
+                <div className="flex gap-3 pt-2">
 
                     <button
                         type="submit"
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+                        disabled={isSubmitting}
+                        className={`${primaryButton} flex-1`}
                     >
-
-                        {selectedBook
-                            ? "Update Book"
-                            : "Add Book"}
-
+                        {isSubmitting
+                            ? "Saving…"
+                            : selectedBook
+                                ? "Save changes"
+                                : "Add book"}
                     </button>
 
-
                     {selectedBook && (
-
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
+                            className={quietButton}
                         >
                             Cancel
                         </button>
-
                     )}
 
                 </div>
